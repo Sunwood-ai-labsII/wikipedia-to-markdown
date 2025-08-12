@@ -1,5 +1,7 @@
 <div align="center">
 
+![](https://github.com/user-attachments/assets/201c0b39-6bf7-4599-a62a-dd3e6f61e5f8)
+
 # 📚 Wikipedia to Markdown Converter
 
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
