@@ -6,6 +6,7 @@ import gradio as gr
 from theme import create_zen_theme
 import tempfile
 import os
+import zipfile
 from urllib.parse import urlparse, unquote
 
 def scrape_wikipedia_to_markdown_final(url: str) -> str:
@@ -103,6 +104,24 @@ def create_download_file(content, filename):
         print(f"ファイル作成エラー: {e}")
         return None
 
+def create_zip_file(file_paths, zip_filename="wikipedia_export.zip"):
+    """複数のファイルをZIP形式でまとめる関数"""
+    try:
+        temp_dir = tempfile.gettempdir()
+        zip_path = os.path.join(temp_dir, zip_filename)
+        
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for file_path in file_paths:
+                if os.path.exists(file_path):
+                    # ファイル名のみを取得してZIPに追加
+                    filename = os.path.basename(file_path)
+                    zipf.write(file_path, filename)
+        
+        return zip_path
+    except Exception as e:
+        print(f"ZIP作成エラー: {e}")
+        return None
+
 def process_wikipedia_url(url):
     """Wikipedia URLを処理してMarkdownを生成するGradio用関数"""
     if not url:
@@ -130,18 +149,19 @@ def process_wikipedia_url(url):
 def process_multiple_urls(urls_text, progress=gr.Progress()):
     """複数のWikipedia URLを一括処理してMarkdownを生成する関数"""
     if not urls_text.strip():
-        return "URLリストを入力してください。", None, []
+        return "URLリストを入力してください。", None, [], None
     
     # URLリストを行ごとに分割
     urls = [url.strip() for url in urls_text.strip().split('\n') if url.strip()]
     
     if not urls:
-        return "有効なURLが見つかりませんでした。", None, []
+        return "有効なURLが見つかりませんでした。", None, [], None
     
     results = []
     all_content = []
     individual_files = []
     total_urls = len(urls)
+    success_count = 0
     
     for i, url in enumerate(urls):
         progress((i + 1) / total_urls, f"処理中: {i + 1}/{total_urls}")
@@ -159,21 +179,45 @@ def process_multiple_urls(urls_text, progress=gr.Progress()):
         try:
             markdown_content = scrape_wikipedia_to_markdown_final(url)
             if markdown_content.startswith("エラー:") or markdown_content.startswith("HTTP"):
-                results.append(f"❌ 処理失敗: {url}\n{markdown_content}")
+                results.append(f"❌ 処理失敗: {url}\n   エラー: {markdown_content}")
             else:
-                results.append(f"✅ 処理成功: {url}\n\n{markdown_content}")
+                # ページタイトルを抽出
+                title_match = re.match(r'^# (.+)', markdown_content)
+                page_title = title_match.group(1) if title_match else "不明なページ"
+                
+                # 文字数とファイル情報を表示
+                char_count = len(markdown_content)
+                filename = get_filename_from_url(url)
+                
+                results.append(f"✅ 処理成功: {url}")
+                results.append(f"   📄 ページタイトル: {page_title}")
+                results.append(f"   📊 文字数: {char_count:,} 文字")
+                results.append(f"   💾 ファイル名: {filename}")
+                
                 all_content.append(markdown_content)
+                success_count += 1
                 
                 # 個別ファイルを作成
-                filename = get_filename_from_url(url)
                 file_path = create_download_file(markdown_content, filename)
                 if file_path:
                     individual_files.append(file_path)
         except Exception as e:
-            results.append(f"❌ 処理エラー: {url}\nエラー内容: {str(e)}")
+            results.append(f"❌ 処理エラー: {url}")
+            results.append(f"   エラー内容: {str(e)}")
+    
+    # サマリー情報を追加
+    summary = [
+        "=" * 60,
+        "📊 処理結果サマリー",
+        "=" * 60,
+        f"🔗 処理対象URL数: {total_urls}",
+        f"✅ 成功: {success_count}",
+        f"❌ 失敗: {total_urls - success_count}",
+        ""
+    ]
     
     # 結果を結合
-    final_result = "\n\n" + "="*80 + "\n\n".join(results)
+    final_result = "\n".join(summary + results)
     
     # 一括ダウンロード用ファイルを作成
     batch_file_path = None
@@ -181,7 +225,12 @@ def process_multiple_urls(urls_text, progress=gr.Progress()):
         combined_content = "\n\n" + "="*80 + "\n\n".join(all_content)
         batch_file_path = create_download_file(combined_content, "wikipedia_batch_export.md")
     
-    return final_result, batch_file_path, individual_files
+    # ZIPファイルを作成
+    zip_file_path = None
+    if individual_files:
+        zip_file_path = create_zip_file(individual_files, "wikipedia_export.zip")
+    
+    return final_result, batch_file_path, individual_files, zip_file_path
 
 # Gradioインターフェースの作成
 def create_interface():
@@ -276,6 +325,10 @@ def create_interface():
                             label="📥 全体をまとめてダウンロード",
                             visible=False
                         )
+                        zip_download_file = gr.File(
+                            label="🗜️ ZIPファイルでダウンロード",
+                            visible=False
+                        )
                         
                         # 個別ダウンロードエリア
                         individual_downloads = gr.Column(visible=False)
@@ -289,7 +342,7 @@ def create_interface():
                 
                 # 一括処理ボタンクリック時の処理
                 def update_batch_output(urls_text):
-                    content, batch_file_path, individual_files = process_multiple_urls(urls_text)
+                    content, batch_file_path, individual_files, zip_file_path = process_multiple_urls(urls_text)
                     
                     # 戻り値のリストを準備
                     outputs = [content]
@@ -297,6 +350,12 @@ def create_interface():
                     # 一括ダウンロードファイル
                     if batch_file_path:
                         outputs.append(gr.update(value=batch_file_path, visible=True))
+                    else:
+                        outputs.append(gr.update(visible=False))
+                    
+                    # ZIPダウンロードファイル
+                    if zip_file_path:
+                        outputs.append(gr.update(value=zip_file_path, visible=True))
                     else:
                         outputs.append(gr.update(visible=False))
                     
@@ -321,7 +380,8 @@ def create_interface():
                     inputs=urls_input,
                     outputs=[
                         batch_output_text, 
-                        batch_download_file, 
+                        batch_download_file,
+                        zip_download_file,
                         individual_downloads,
                         individual_file_1,
                         individual_file_2,
@@ -344,8 +404,9 @@ def create_interface():
         gr.Markdown("- 生成されたMarkdownは右側のテキストエリアからコピーできます")
         gr.Markdown("- **📥 ダウンロード機能**: 変換が成功すると、マークダウンファイルとして直接ダウンロードできます")
         gr.Markdown("  - 単体処理: ページ名に基づいたファイル名で個別ダウンロード")
-        gr.Markdown("  - 一括処理: 各URLごとの個別ダウンロード + 全体をまとめた一括ダウンロード")
+        gr.Markdown("  - 一括処理: 各URLごとの個別ダウンロード + 全体をまとめた一括ダウンロード + **🗜️ ZIPファイル**")
         gr.Markdown("  - 個別ダウンロード: 成功した各ページを個別のファイルとしてダウンロード可能（最大5つまで表示）")
+        gr.Markdown("  - **ZIPダウンロード**: 複数のMarkdownファイルを1つのZIPファイルにまとめてダウンロード")
         
         # ZENテーマの説明
         gr.HTML("""
