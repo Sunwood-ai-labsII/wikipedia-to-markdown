@@ -5,9 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: wikipedia-to-markdown-dev
     ports:
-      - "7861:7861"
+      - "7861:7860"
     environment:
       - PYTHONUNBUFFERED=1
       - GRADIO_SERVER_NAME=0.0.0.0
