@@ -4,6 +4,9 @@ import html2text
 import re
 import gradio as gr
 from theme import create_zen_theme
+import tempfile
+import os
+from urllib.parse import urlparse, unquote
 
 def scrape_wikipedia_to_markdown_final(url: str) -> str:
     """
@@ -71,36 +74,73 @@ def scrape_wikipedia_to_markdown_final(url: str) -> str:
     except Exception as e:
         return f"予期せぬエラーが発生しました: {e}"
 
+def get_filename_from_url(url):
+    """URLからファイル名を生成する関数"""
+    try:
+        # URLからページ名を抽出
+        parsed_url = urlparse(url)
+        page_name = parsed_url.path.split('/')[-1]
+        # URLデコード
+        page_name = unquote(page_name)
+        # ファイル名として使用できない文字を置換
+        safe_filename = re.sub(r'[<>:"/\\|?*]', '_', page_name)
+        return f"{safe_filename}.md"
+    except:
+        return "wikipedia_page.md"
+
+def create_download_file(content, filename):
+    """ダウンロード用の一時ファイルを作成する関数"""
+    try:
+        # 一時ディレクトリにファイルを作成
+        temp_dir = tempfile.gettempdir()
+        file_path = os.path.join(temp_dir, filename)
+        
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        
+        return file_path
+    except Exception as e:
+        print(f"ファイル作成エラー: {e}")
+        return None
+
 def process_wikipedia_url(url):
     """Wikipedia URLを処理してMarkdownを生成するGradio用関数"""
     if not url:
-        return "URLを入力してください。"
+        return "URLを入力してください。", None
     
     # URLが有効かチェック
     if not url.startswith('http'):
-        return "有効なURLを入力してください（http://またはhttps://から始まるURL）。"
+        return "有効なURLを入力してください（http://またはhttps://から始まるURL）。", None
     
     # Wikipedia URLかチェック
     if 'wikipedia.org' not in url:
-        return "WikipediaのURLを入力してください。"
+        return "WikipediaのURLを入力してください。", None
     
     # スクレイピングを実行
     markdown_content = scrape_wikipedia_to_markdown_final(url)
     
-    return markdown_content
+    # ダウンロード用ファイルを作成
+    if not markdown_content.startswith("エラー:") and not markdown_content.startswith("HTTP"):
+        filename = get_filename_from_url(url)
+        file_path = create_download_file(markdown_content, filename)
+        return markdown_content, file_path
+    else:
+        return markdown_content, None
 
 def process_multiple_urls(urls_text, progress=gr.Progress()):
     """複数のWikipedia URLを一括処理してMarkdownを生成する関数"""
     if not urls_text.strip():
-        return "URLリストを入力してください。"
+        return "URLリストを入力してください。", None, []
     
     # URLリストを行ごとに分割
     urls = [url.strip() for url in urls_text.strip().split('\n') if url.strip()]
     
     if not urls:
-        return "有効なURLが見つかりませんでした。"
+        return "有効なURLが見つかりませんでした。", None, []
     
     results = []
+    all_content = []
+    individual_files = []
     total_urls = len(urls)
     
     for i, url in enumerate(urls):
@@ -122,12 +162,26 @@ def process_multiple_urls(urls_text, progress=gr.Progress()):
                 results.append(f"❌ 処理失敗: {url}\n{markdown_content}")
             else:
                 results.append(f"✅ 処理成功: {url}\n\n{markdown_content}")
+                all_content.append(markdown_content)
+                
+                # 個別ファイルを作成
+                filename = get_filename_from_url(url)
+                file_path = create_download_file(markdown_content, filename)
+                if file_path:
+                    individual_files.append(file_path)
         except Exception as e:
             results.append(f"❌ 処理エラー: {url}\nエラー内容: {str(e)}")
     
     # 結果を結合
     final_result = "\n\n" + "="*80 + "\n\n".join(results)
-    return final_result
+    
+    # 一括ダウンロード用ファイルを作成
+    batch_file_path = None
+    if all_content:
+        combined_content = "\n\n" + "="*80 + "\n\n".join(all_content)
+        batch_file_path = create_download_file(combined_content, "wikipedia_batch_export.md")
+    
+    return final_result, batch_file_path, individual_files
 
 # Gradioインターフェースの作成
 def create_interface():
@@ -163,15 +217,30 @@ def create_interface():
                             max_lines=50,
                             show_copy_button=True
                         )
+                        download_file = gr.File(
+                            label="📥 マークダウンファイルをダウンロード",
+                            visible=False
+                        )
                 
                 # ボタンクリック時の処理
+                def update_single_output(url):
+                    content, file_path = process_wikipedia_url(url)
+                    if file_path:
+                        return content, gr.update(value=file_path, visible=True)
+                    else:
+                        return content, gr.update(visible=False)
+                
                 convert_btn.click(
-                    fn=process_wikipedia_url,
+                    fn=update_single_output,
                     inputs=url_input,
-                    outputs=output_text
+                    outputs=[output_text, download_file]
                 )
                 
                 # 使用例
+                def example_process(url):
+                    content, _ = process_wikipedia_url(url)
+                    return content
+                
                 gr.Examples(
                     examples=[
                         ["https://ja.wikipedia.org/wiki/Python"],
@@ -180,7 +249,7 @@ def create_interface():
                     ],
                     inputs=url_input,
                     outputs=output_text,
-                    fn=process_wikipedia_url,
+                    fn=example_process,
                     cache_examples=False
                 )
             
@@ -199,16 +268,67 @@ def create_interface():
                     with gr.Column(scale=1):
                         batch_output_text = gr.Textbox(
                             label="📝 一括変換結果",
-                            lines=20,
-                            max_lines=50,
+                            lines=15,
+                            max_lines=30,
                             show_copy_button=True
                         )
+                        batch_download_file = gr.File(
+                            label="📥 全体をまとめてダウンロード",
+                            visible=False
+                        )
+                        
+                        # 個別ダウンロードエリア
+                        individual_downloads = gr.Column(visible=False)
+                        with individual_downloads:
+                            gr.Markdown("### 📥 個別ダウンロード")
+                            individual_file_1 = gr.File(label="", visible=False)
+                            individual_file_2 = gr.File(label="", visible=False)
+                            individual_file_3 = gr.File(label="", visible=False)
+                            individual_file_4 = gr.File(label="", visible=False)
+                            individual_file_5 = gr.File(label="", visible=False)
                 
                 # 一括処理ボタンクリック時の処理
+                def update_batch_output(urls_text):
+                    content, batch_file_path, individual_files = process_multiple_urls(urls_text)
+                    
+                    # 戻り値のリストを準備
+                    outputs = [content]
+                    
+                    # 一括ダウンロードファイル
+                    if batch_file_path:
+                        outputs.append(gr.update(value=batch_file_path, visible=True))
+                    else:
+                        outputs.append(gr.update(visible=False))
+                    
+                    # 個別ダウンロードエリアの表示/非表示
+                    if individual_files:
+                        outputs.append(gr.update(visible=True))
+                    else:
+                        outputs.append(gr.update(visible=False))
+                    
+                    # 個別ファイル（最大5つまで表示）
+                    for i in range(5):
+                        if i < len(individual_files):
+                            filename = os.path.basename(individual_files[i])
+                            outputs.append(gr.update(value=individual_files[i], visible=True, label=f"📄 {filename}"))
+                        else:
+                            outputs.append(gr.update(visible=False))
+                    
+                    return outputs
+                
                 batch_convert_btn.click(
-                    fn=process_multiple_urls,
+                    fn=update_batch_output,
                     inputs=urls_input,
-                    outputs=batch_output_text
+                    outputs=[
+                        batch_output_text, 
+                        batch_download_file, 
+                        individual_downloads,
+                        individual_file_1,
+                        individual_file_2,
+                        individual_file_3,
+                        individual_file_4,
+                        individual_file_5
+                    ]
                 )
                 
                 gr.Markdown("### 💡 一括処理の使い方")
@@ -222,6 +342,10 @@ def create_interface():
         gr.Markdown("- **単体処理**: 1つのWikipediaページを変換したい場合")
         gr.Markdown("- **一括処理**: 複数のWikipediaページを一度に変換したい場合")
         gr.Markdown("- 生成されたMarkdownは右側のテキストエリアからコピーできます")
+        gr.Markdown("- **📥 ダウンロード機能**: 変換が成功すると、マークダウンファイルとして直接ダウンロードできます")
+        gr.Markdown("  - 単体処理: ページ名に基づいたファイル名で個別ダウンロード")
+        gr.Markdown("  - 一括処理: 各URLごとの個別ダウンロード + 全体をまとめた一括ダウンロード")
+        gr.Markdown("  - 個別ダウンロード: 成功した各ページを個別のファイルとしてダウンロード可能（最大5つまで表示）")
         
         # ZENテーマの説明
         gr.HTML("""
