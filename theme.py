@@ -36,8 +36,9 @@ def create_zen_theme():
         input_border_color="#d4c4a8",
         input_border_color_focus="#d4a574",
         block_background_fill="#ffffff",
-        block_border_color="#f5f2ed",
+        block_border_color="#e8e2d5",
+        block_border_width="1px",
         panel_background_fill="#ffffff",
-        panel_border_color="#f5f2ed",
+        panel_border_color="#e8e2d5",
         slider_color="#d4a574",
     )
