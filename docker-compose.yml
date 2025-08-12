@@ -5,9 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: wikipedia-to-markdown
     ports:
-      - "7861:7861"
+      - "7861:7860"
     environment:
       - PYTHONUNBUFFERED=1
     # volumes:
