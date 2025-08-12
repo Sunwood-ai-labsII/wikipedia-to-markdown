@@ -2,231 +2,173 @@
 license: mit
 title: wikipedia to markdown
 sdk: gradio
-emoji: 📈
-colorFrom: green
-colorTo: indigo
+emoji: 📚
+colorFrom: amber
+colorTo: stone
 thumbnail: >-
   https://cdn-uploads.huggingface.co/production/uploads/64e0ef4a4c78e1eba5178d7a/vJQZ24fctExV3dax_BGU-.jpeg
 sdk_version: 5.42.0
 ---
+
 <div align="center">
+
+![Wikipedia to Markdown Converter](https://github.com/user-attachments/assets/201c0b39-6bf7-4599-a62a-dd3e6f61e5f8)
 
 # 📚 Wikipedia to Markdown Converter
 
-<img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
-<img src="https://img.shields.io/badge/Gradio-4.44.0?style=for-the-badge&logo=gradio&logoColor=white" alt="Gradio" />
-<img src="https://img.shields.io/badge/BeautifulSoup-4.12.2?style=for-the-badge&logo=beautifulsoup&logoColor=white" alt="BeautifulSoup" />
-<img src="https://img.shields.io/badge/html2text-2020.1.16?style=for-the-badge&logo=html&logoColor=white" alt="html2text" />
+*WikipediaページをMarkdown形式に変換するWebアプリケーション*
+
+[![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![Gradio](https://img.shields.io/badge/Gradio-5.42+-FF6B6B?style=for-the-badge&logo=gradio&logoColor=white)](https://gradio.app)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+[![Demo](https://img.shields.io/badge/🚀%20デモサイト-Live-orange?style=for-the-badge)](https://huggingface.co/spaces/MakiAi/wikipedia-to-markdown)
 
 </div>
 
 ---
 
-## 📖 概要
+## 🌟 概要
 
-**Wikipedia to Markdown Converter** は、Wikipediaのページをスクレイピングして、整形されたMarkdown形式に変換するWebアプリケーションです。和モダンなZENテーマを採用し、直感的な操作で簡単にコンテンツを変換できます。
+**Wikipedia to Markdown Converter** は、Wikipediaの記事を整形されたMarkdownドキュメントに変換するWebアプリケーションです。単体処理と一括処理に対応し、複数のダウンロード形式を提供します。
 
-### 🎯 主な用途
-- Wikipedia記事のMarkdown化
-- コンテンツの再利用と編集
-- ドキュメント作成支援
-- 学習資料の作成
+### ✨ **主要機能**
 
-### 🌟 特徴
-- **日本語対応**: 文字化けしない正しい文字コード処理
-- **和モダンデザイン**: ZENテーマで美しいUI
-- **自動整形**: 不要な部分（脚注、編集リンクなど）を自動削除
-- **直感的操作**: ウェブベースで簡単に操作
+- 🔄 **単体・一括処理** - 1つまたは複数のWikipediaページを同時変換
+- 📊 **詳細分析** - 文字数、成功率、ファイル情報を表示
+- 🗜️ **複数形式** - 個別ファイル、結合文書、ZIPダウンロード
+- 🌐 **多言語対応** - 全てのWikipedia言語版に対応
+- � **要使いやすいUI** - 直感的で美しいインターフェース
 
 ---
 
-## 🎨 デザインの特徴
+## 🚀 使い方
 
-### ZENテーマの哲学
-- **空（くう）**: 余白を活かしたミニマルなデザイン
-- **和（わ）**: 琥珀色を基調とした和風配色
-- **簡（かん）**: 直感的でシンプルな操作
-- **禅（ぜん）**: 視覚的な静けさを追求
+### �  **オンラインで試す（推奨）**
+**[🚀 デモサイトはこちら](https://huggingface.co/spaces/MakiAi/wikipedia-to-markdown)**
 
-### カラースキーム
-- **プライマリ色**: `#d4a574`（琥珀色）
-- **セカンダリ色**: `#f5f2ed`（薄いベージュ）
-- **背景色**: `#ffffff`（白）
-- **テキスト色**: `#3d405b`（深い青紫）
-
-### 日本語フォント
-- Hiragino Sans
-- Noto Sans JP
-- Yu Gothic
-- system-ui, sans-serif
-
----
-
-## 🚀 使い方（クイックスタート）
-
-### 📝 アプリケーションの起動
+### 💻 **ローカルで実行**
 
 ```bash
-# 依存関係のインストール
-pip install requests beautifulsoup4 html2text gradio
+# リポジトリをクローン
+git clone https://github.com/your-username/wikipedia-to-markdown.git
+cd wikipedia-to-markdown
 
-# アプリケーションの実行
+# 依存関係をインストール
+pip install -r requirements.txt
+
+# アプリケーションを起動
 python app.py
 ```
 
-起動後、ブラウザで `http://localhost:7861` にアクセスします。
+### 🐳 **Dockerで実行**
 
-### 🔄 操作手順
+```bash
+# Docker Composeを使用
+docker-compose up -d
 
-1. **URLの入力**
-   - 変換したいWikipediaページのURLを入力
-   - デフォルトでPythonのページが設定されています
-
-2. **変換の実行**
-   - 「✨ 変換する」ボタンをクリック
-   - 自動でスクレイピングとMarkdown変換が実行されます
-
-3. **結果の利用**
-   - 生成されたMarkdownをコピーして使用
-   - 一括コピー機能付きで便利です
-
-### 📋 使用例
-
-```python
-# サンプルURL
-https://ja.wikipedia.org/wiki/Python
-https://ja.wikipedia.org/wiki/JavaScript
-https://ja.wikipedia.org/wiki/HTML
+# ブラウザで http://localhost:7860 にアクセス
 ```
 
 ---
 
-## ⚙️ 機能詳細
+## 📋 操作方法
 
-### 🔄 変換処理の流れ
+### 🔗 **単体処理**
+1. WikipediaのURLを入力
+2. 「✨ 変換する」ボタンをクリック
+3. 生成されたMarkdownをコピーまたはダウンロード
 
-1. **HTMLの取得と解析**
-   - 指定されたURLからHTMLを取得
-   - BeautifulSoupで解析し、構造を把握
+### 📚 **一括処理**
+1. 複数のURLを1行に1つずつ入力
+2. 「🚀 一括変換する」ボタンをクリック
+3. 処理結果を確認し、必要な形式でダウンロード
 
-2. **主要コンテンツの抽出**
-   - `mw-parser-output`クラスのコンテンツを抽出
-   - ページタイトルをH1見出しとして取得
+### 📊 **処理結果の表示例**
+```
+============================================================
+📊 処理結果サマリー
+============================================================
+🔗 処理対象URL数: 3
+✅ 成功: 2
+❌ 失敗: 1
 
-3. **HTMLの事前整形**
-   - `<dt>`タグを見出しに変換
-   - 不要なタグを整理
+✅ 処理成功: https://ja.wikipedia.org/wiki/Python
+   📄 ページタイトル: Python
+   📊 文字数: 15,432 文字
+   💾 ファイル名: Python.md
+```
 
-4. **Markdownへの変換**
-   - html2textでHTMLをMarkdownに変換
-   - レイアウトを維持した整形
+---
 
-5. **不要部分の削除**
-   - 「## 脚注」以降を削除
-   - `[編集]`リンクを削除
+## 📦 ダウンロード形式
 
-6. **最終整形**
-   - タイトルと本文を結合
-   - 余分な空白を整理
+| 形式 | 説明 | 用途 |
+|------|------|------|
+| **📄 個別ファイル** | 各ページを別々のMarkdownファイル | 個別編集・管理 |
+| **📚 結合文書** | 全ページを1つのファイルに結合 | 一括閲覧・印刷 |
+| **🗜️ ZIPアーカイブ** | 全ファイルを圧縮してまとめて | 大量ファイルの管理 |
 
-### 🔧 技術的特徴
+---
 
-- **文字コード自動検出**: User-Agentと文字コード自動検出で日本語を正しく処理
-- **エラーハンドリング**: 無効なURL、ネットワークエラーに対応
-- **レスポンシブデザイン**: 画面サイズに合わせたレイアウト
-- **セキュリティ**: 適切なヘッダー設定でスクレイピングを安定化
+## 🔧 技術仕様
+
+### **使用技術**
+- **Python 3.8+** - メイン言語
+- **Gradio** - Webインターフェース
+- **BeautifulSoup4** - HTML解析
+- **html2text** - Markdown変換
+- **Requests** - HTTP通信
+
+### **処理フロー**
+1. **URL検証** - 入力URLの妥当性チェック
+2. **HTML取得** - Wikipediaページの取得
+3. **コンテンツ抽出** - 主要コンテンツの抽出
+4. **クリーンアップ** - 不要部分（脚注、編集リンク等）の削除
+5. **Markdown変換** - 整形されたMarkdownに変換
+6. **ファイル生成** - 各種形式でのファイル出力
 
 ---
 
 ## 📁 プロジェクト構成
 
 ```
-.
-├── app.py                 # メインアプリケーション
-├── requirements.txt       # 依存関係（作成が必要）
-├── .gitignore            # Git設定
-├── LICENSE               # ライセンス
-└── README.md             # このドキュメント
-```
-
-### 🔧 必要な依存関係
-
-```txt
-requests>=2.31.0
-beautifulsoup4>=4.12.0
-html2text>=2020.1.16
-gradio>=4.44.0
-```
-
-依存関係をインストールするには：
-
-```bash
-pip install -r requirements.txt
+wikipedia-to-markdown/
+├── app.py                    # メインアプリケーション
+├── theme.py                  # UIテーマ設定
+├── requirements.txt          # Python依存関係
+├── docker-compose.yml        # Docker設定
+├── .github/workflows/        # CI/CD設定
+└── README.md                 # このファイル
 ```
 
 ---
 
 ## 🛠️ カスタマイズ
 
-### 🎨 テーマの変更
+### **テーマ変更**
+`theme.py`を編集してUIの色やスタイルを変更できます。
 
-ZENテーマのカラーやフォントを変更するには、`app.py`の`create_zen_theme()`関数を編集します。
-
-```python
-def create_zen_theme():
-    return gr.Theme(
-        primary_hue="amber",      # プライマリ色
-        secondary_hue="stone",    # セカンダリ色
-        neutral_hue="slate",      # ニュートラル色
-        # ... その他の設定
-    )
-```
-
-### 🔧 変換ロジックの変更
-
-スクレイピングや変換のロジックを変更するには、`scrape_wikipedia_to_markdown_final()`関数を編集します。
+### **処理ロジック拡張**
+`app.py`の`scrape_wikipedia_to_markdown_final()`関数を編集して、変換処理をカスタマイズできます。
 
 ---
 
-## 🌐 アプリケーション画面
+## 📄 ライセンス
 
-### 📱 インターフェース例
-
-- **ヘッダー**: グラデーション背景で和モダンな印象
-- **入力エリア**: URL入力ボックスと変換ボタン
-- **出力エリア**: 生成されたMarkdownを表示
-- **使用例**: クイック選択用のサンプルURL
-
-### 🎯 ユーザビリティ
-
-- **一括コピー**: Markdownをワンクリックでコピー
-- **サンプル選択**: 代表的なWikipediaページをクイック選択
-- **リアルタイムフィードバック**: 変換中の状態を表示
-- **エラーメッセージ**: 分かりやすい日本語のエラー表示
+このプロジェクトは[MITライセンス](LICENSE)の下で公開されています。
 
 ---
 
-## 🔗 参考リンク
+## 🤝 コントリビューション
 
-- [Gradio公式サイト](https://www.gradio.app/)
-- [BeautifulSoup公式ドキュメント](https://www.crummy.com/software/BeautifulSoup/bs4/doc/)
-- [html2text公式サイト](https://github.com/Alir3z4/html2text)
-- [Wikipedia API](https://ja.wikipedia.org/api/rest_v1/)
+バグ報告や機能提案は[GitHub Issues](https://github.com/your-username/wikipedia-to-markdown/issues)でお願いします。
 
 ---
 
-## 📝 ライセンス
+<div align="center">
 
-このプロジェクトは [LICENSE](LICENSE) に基づいて提供されています。
+**🌟 このプロジェクトが役に立ったらスターをお願いします！**
 
----
+*© 2025 Wikipedia to Markdown Converter*
 
-## 🙏 謝辞
-
-- [Gradio](https://www.gradio.app/) - Webアプリケーションフレームワーク
-- [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/) - HTML解析ライブラリ
-- [html2text](https://github.com/Alir3z4/html2text) - HTMLからMarkdownへの変換ツール
-
----
-
-© 2025 Wikipedia to Markdown Converter
+</div>
