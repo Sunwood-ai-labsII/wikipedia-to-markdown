@@ -3,8 +3,8 @@ license: mit
 title: wikipedia to markdown
 sdk: gradio
 emoji: 📚
-colorFrom: amber
-colorTo: stone
+colorFrom: yellow
+colorTo: gray
 thumbnail: >-
   https://cdn-uploads.huggingface.co/production/uploads/64e0ef4a4c78e1eba5178d7a/vJQZ24fctExV3dax_BGU-.jpeg
 sdk_version: 5.42.0
